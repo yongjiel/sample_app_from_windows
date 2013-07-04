@@ -15,6 +15,22 @@ describe "Static pages" do
 		let (:page_title) { ''}
 		it_should_behave_like "all static pages"
     it { should_not have_selector('title', :text => '| Home') }
+
+		describe "for signed-in users" do
+      let(:user) { FactoryGirl.create(:user) }
+      before do
+        FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
+        FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+        valid_signin user
+        visit root_path
+      end
+
+      it "should render the user's feed" do
+        user.feed.each do |item|
+          page.should have_selector("li##{item.id}", text: item.content)
+        end
+      end
+    end
   end
 
   describe "Help page" do
@@ -35,16 +51,16 @@ describe "Static pages" do
 #    it { should have_selector('title',:text => full_title('About Us')) }
   end
 
-describe "Contact page" do
+	describe "Contact page" do
 		before { visit contact_path }
 		let (:heading) { 'Contact' }
 		let (:page_title) { 'Contact' }
 		it_should_behave_like "all static pages"
-#    it { should have_selector('h1', text: 'Contact') }
-#    it { should have_selector('title', text: full_title("Contact")) }
-  end
+	#    it { should have_selector('h1', text: 'Contact') }
+	#    it { should have_selector('title', text: full_title("Contact")) }
+		end
 
-it "should have the right links on the layout" do
+	it "should have the right links on the layout" do
     visit root_path
     click_link "About"
     page.should have_selector 'title', text: full_title('About Us')
