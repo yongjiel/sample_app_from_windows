@@ -5,7 +5,9 @@ describe RelationshipsController do
   let(:user) { FactoryGirl.create(:user) }
   let(:other_user) { FactoryGirl.create(:user) }
 
-  before { sign_in user }
+
+  before { valid_signin user }
+
 
   describe "creating a relationship with Ajax" do
 
