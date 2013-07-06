@@ -26,7 +26,56 @@ describe "User pages" do
       	it { should have_content(user.microposts.count) }
     	end
 			
-	end
+			describe "follow/unfollow buttons" do
+		    let(:other_user) { FactoryGirl.create(:user) }
+		    before { valid_signin user }
+
+		    describe "following a user" do
+		      before { visit user_path(other_user) }
+
+		      it "should increment the followed user count" do
+		        expect do
+		          click_button "Follow"
+		        end.to change(user.followed_users, :count).by(1)
+		      end
+
+		      it "should increment the other user's followers count" do
+		        expect do
+		          click_button "Follow"
+		        end.to change(other_user.followers, :count).by(1)
+		      end
+
+		      describe "toggling the button" do
+		        before { click_button "Follow" }
+		        it { should have_selector('input', value: 'Unfollow') }
+		      end
+		    end#"following a user"
+
+		    describe "unfollowing a user" do
+		      before do
+		        user.follow!(other_user)
+		        visit user_path(other_user)
+		      end
+
+		      it "should decrement the followed user count" do
+		        expect do
+		          click_button "Unfollow"
+		        end.to change(user.followed_users, :count).by(-1)
+		      end
+
+		      it "should decrement the other user's followers count" do
+		        expect do
+		          click_button "Unfollow"
+		        end.to change(other_user.followers, :count).by(-1)
+		      end
+
+		      describe "toggling the button" do
+		        before { click_button "Unfollow" }
+		        it { should have_selector('input', value: 'Follow') }
+		      end
+		    end #"unfollowing a user"
+    	end #"follow/unfollow buttons"
+	end#"profile page"
 
 	describe "signup" do
 
@@ -46,7 +95,7 @@ describe "User pages" do
         it { should have_content('error') }
       end
 
-    end
+    end#"with invalid information"
 
     describe "with valid information" do
       before do
@@ -68,8 +117,8 @@ describe "User pages" do
         it { should have_selector('div.alert.alert-success', text: 'Welcome') }
       end
 			
-    end
-  end
+    end#"with valid information" 
+  end#"signup"
 	
 	describe "edit" do
     let(:user) { FactoryGirl.create(:user) }
@@ -108,7 +157,7 @@ describe "User pages" do
       specify { user.reload.email.should == new_email }
     end
 		
-  end
+  end# "edit"
 	
 	describe "index" do
 		 let(:user) { FactoryGirl.create(:user) }
@@ -131,7 +180,34 @@ describe "User pages" do
           page.should have_selector('li', text: user.name)
         end
       end
-    end
+    end# "pagination" 
+		describe "following/followers" do
+		  let(:user) { FactoryGirl.create(:user) }
+		  let(:other_user) { FactoryGirl.create(:user) }
+		  before { user.follow!(other_user) }
+
+		  describe "followed users" do
+		    before do
+		      valid_signin user
+		      visit following_user_path(user)
+		    end
+
+		    it { should have_selector('title', text: full_title('Following')) }
+		    it { should have_selector('h3', text: 'Following') }
+		    it { should have_link(other_user.name, href: user_path(other_user)) }
+		  end
+
+    	describe "followers" do
+		    before do
+		      valid_signin other_user
+		      visit followers_user_path(other_user)
+		    end
+
+		    it { should have_selector('title', text: full_title('Followers')) }
+		    it { should have_selector('h3', text: 'Followers') }
+		    it { should have_link(user.name, href: user_path(user)) }
+		  end
+  	end #"following/followers"
 	
 		describe "delete links" do
 
@@ -150,11 +226,9 @@ describe "User pages" do
         end
         it { should_not have_link('delete', href: user_path(admin)) }
       end
-    end
+    end#"delete links"
 		
-  end
-	
-
+  end#"index"
 
 end
 
